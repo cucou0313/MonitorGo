@@ -1,0 +1,15 @@
+### monitor get all tasks
+GET http://10.10.103.138:10000/task/get
+Accept: application/json
+
+### monitor add task
+GET http://10.10.103.138:10000/task/add?name={{name}}&ip={{ip}}
+Accept: application/json
+
+### monitor del task
+GET http://10.10.103.138:10000/task/del?id={{id}}
+Accept: application/json
+
+### monitor get res
+GET http://10.10.103.138:10000/res/get
+Accept: application/json
