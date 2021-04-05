@@ -24,7 +24,6 @@ func GetTaskHandler(ctx *gin.Context) {
 	for _, task := range models.MyMonitorTask.Tasks {
 		var tmp map[string]interface{}
 		if task_json, err := json.Marshal(task); err == nil {
-			//data=append(data,string(task_json))
 			_ = json.Unmarshal(task_json, &tmp)
 			data = append(data, tmp)
 		}

@@ -7,7 +7,10 @@ IDE: GoLand
 
 package utils
 
-import "github.com/tidwall/gjson"
+import (
+	"github.com/tidwall/gjson"
+	"reflect"
+)
 
 /**
  * @Description:使用gjson获取string类型，不存在则返回默认值
@@ -56,4 +59,20 @@ func JsonGetArray(str *string, key string, default_res []gjson.Result) []gjson.R
 		return res.Array()
 	}
 	return default_res
+}
+
+/**
+ * @Description: Struct to Map
+ * @param obj 结构体内部不能有非基础类型的其他类型
+ * @return map[string]interface{}
+ */
+func Struct2Map(obj interface{}) map[string]interface{} {
+	t := reflect.TypeOf(obj)
+	v := reflect.ValueOf(obj)
+
+	var data = make(map[string]interface{})
+	for i := 0; i < t.NumField(); i++ {
+		data[t.Field(i).Name] = v.Field(i).Interface()
+	}
+	return data
 }
