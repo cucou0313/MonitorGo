@@ -10,29 +10,18 @@ package main
 import (
 	"MonitorGo/src/utils"
 	"fmt"
-	"github.com/shirou/gopsutil/v3/winservices"
 )
 
 var mylog = utils.LogInit("main")
 
 func main() {
-	//var pid uint32
-	//if res, err := utils.GetPidByWmiProcess("goland64.exe"); err == nil {
-	//	fmt.Println("ok")
-	//	jsonBytes, _ := json.MarshalIndent(res, "", "\t")
-	//	fmt.Println(string(jsonBytes))
-	//	pid = res.ProcessId
-	//	fmt.Println(pid)
-	//} else {
-	//	fmt.Println("err")
-	//	fmt.Println(err)
-	//}
-	svcs, err := winservices.ListServices()
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println(svcs)
+	PId := 0
+	current_pid := 1000
+	pid_change := false
+	if PId != current_pid && (PId != 0 || current_pid == 0) {
+		pid_change = true
 	}
+	fmt.Println(pid_change)
 	//router := views.InitRouter()
 	//defer models.CloseAllFile(models.MyMonitorTask)
 	//go logic.RunMonitorTasks(models.MyMonitorTask)

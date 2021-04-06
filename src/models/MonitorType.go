@@ -38,8 +38,8 @@ type TaskInfo struct {
 	TaskName string `json:"TaskName"`
 	TaskTime int64  `json:"TaskTime"`
 	HostIp   string `json:"HostIp"`
-	// 扫描间隔时间
-	ScanInterval int `json:"ScanInterval"`
+	// 初始pid=0
+	PId uint32 `json:"PId"`
 	// 该任务的日志采集文件指针
 	file *os.File
 	// 该任务的log.Logger指针
@@ -75,13 +75,13 @@ func (mt *MonitorTask) AddTask(name string, ip string, scanInt int) error {
 	file_path := ip_path + string(os.PathSeparator) + name + id + ".log"
 	f, l := utils.CreateFile(file_path)
 	newTask := &TaskInfo{
-		TaskId:       id,
-		TaskName:     name,
-		TaskTime:     time.Now().Unix(),
-		HostIp:       ip,
-		ScanInterval: scanInt,
-		file:         f,
-		logger:       l,
+		TaskId:   id,
+		TaskName: name,
+		TaskTime: time.Now().Unix(),
+		HostIp:   ip,
+		PId:      0,
+		file:     f,
+		logger:   l,
 	}
 	task_json, _ := json.Marshal(newTask)
 	l.Println(string(task_json))
@@ -111,6 +111,12 @@ func (mt *MonitorTask) DelTask(id string) error {
 
 func CloseAllFile(mt *MonitorTask) {
 	for _, task := range mt.Tasks {
-		task.file.Close()
+		for {
+			err := task.file.Close()
+			if err != nil {
+				continue
+			}
+			break
+		}
 	}
 }

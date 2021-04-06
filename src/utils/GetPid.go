@@ -93,18 +93,9 @@ func GetPidByWmiService(serviceName string) (Win32_Service, error) {
 }
 
 type Win32_Process struct {
-	Name            string
-	ProcessId       uint32
-	ParentProcessId uint32
-	Status          string
-	CommandLine     string
-	CSName          string
-	ExecutablePath  string
-	OSName          string
-	PeakVirtualSize uint64
-	ThreadCount     uint32
-	VirtualSize     uint64
-	WindowsVersion  string
+	Name        string
+	ProcessId   uint32
+	ThreadCount uint32
 }
 
 /**
