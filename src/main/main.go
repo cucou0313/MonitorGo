@@ -8,26 +8,21 @@ IDE: GoLand
 package main
 
 import (
+	"MonitorGo/src/logic"
+	"MonitorGo/src/models"
 	"MonitorGo/src/utils"
-	"fmt"
+	"MonitorGo/src/views"
 )
 
 var mylog = utils.LogInit("main")
 
 func main() {
-	PId := 0
-	current_pid := 1000
-	pid_change := false
-	if PId != current_pid && (PId != 0 || current_pid == 0) {
-		pid_change = true
-	}
-	fmt.Println(pid_change)
-	//router := views.InitRouter()
-	//defer models.CloseAllFile(models.MyMonitorTask)
-	//go logic.RunMonitorTasks(models.MyMonitorTask)
-	//
-	//mylog.Info("main start")
-	//mylog.Info("start listen port 10000")
-	//
-	//router.Run(":10000")
+	router := views.InitRouter()
+	defer models.CloseAllFile(models.MyMonitorTask)
+	go logic.RunMonitorTasks(models.MyMonitorTask)
+
+	mylog.Info("main start")
+	mylog.Info("start listen port 10000")
+
+	router.Run(":10000")
 }

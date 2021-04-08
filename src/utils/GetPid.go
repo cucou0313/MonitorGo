@@ -4,6 +4,7 @@ Author: Guo Kaikuo
 Create time: 2021-04-06 10:58
 IDE: GoLand
 */
+//+build windows
 
 package utils
 

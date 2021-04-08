@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 )
 
 var mylog = utils.LogInit("test")
@@ -36,12 +35,7 @@ func GetTaskHandler(ctx *gin.Context) {
 func AddTaskHandler(ctx *gin.Context) {
 	name := ctx.Query("name")
 	ip := ctx.Query("ip")
-	scanInt := ctx.DefaultQuery("scanInt", "60")
-	si, err := strconv.Atoi(scanInt)
-	if err != nil || (si < 30) {
-		fmt.Println("Scan Interval time is invalid")
-	}
-	err = models.MyMonitorTask.AddTask(name, ip, si)
+	err := models.MyMonitorTask.AddTask(name, ip)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
 			"errCode": 1,
@@ -50,7 +44,7 @@ func AddTaskHandler(ctx *gin.Context) {
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{
 			"errCode": 0,
-			"errMsg":  fmt.Sprintf("add new task success,name=%s,ip=%s", name, ip),
+			"Msg":     fmt.Sprintf("Add new task successfully,name=%s,ip=%s", name, ip),
 		})
 	}
 }
@@ -66,7 +60,7 @@ func DelTaskHandler(ctx *gin.Context) {
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{
 			"errCode": 0,
-			"errMsg":  fmt.Sprintf("del this task success,id=%s", id),
+			"Msg":     fmt.Sprintf("Del this task successfully,id=%s", id),
 		})
 	}
 }

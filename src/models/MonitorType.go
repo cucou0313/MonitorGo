@@ -9,9 +9,9 @@ package models
 
 import (
 	"MonitorGo/src/utils"
-	"encoding/json"
 	"errors"
 	"github.com/go-basic/uuid"
+	"github.com/shirou/gopsutil/v3/cpu"
 	"log"
 	"os"
 	"path/filepath"
@@ -20,6 +20,7 @@ import (
 
 var MyMonitorTask = new(MonitorTask)
 var task_dir = filepath.Join(utils.GetExecPath(), "TaskLog")
+var MyCoreCount = GetCoreCount()
 
 // 创建task日志路径
 func init() {
@@ -39,11 +40,12 @@ type TaskInfo struct {
 	TaskTime int64  `json:"TaskTime"`
 	HostIp   string `json:"HostIp"`
 	// 初始pid=0
-	PId uint32 `json:"PId"`
+	PId       uint32 `json:"PId"`
+	CoreCount int    `json:"CoreCount"`
 	// 该任务的日志采集文件指针
-	file *os.File
+	File *os.File `json:"File,omitempty"`
 	// 该任务的log.Logger指针
-	logger *log.Logger
+	Logger *log.Logger `json:"Logger,omitempty"`
 }
 
 type MonitorTask struct {
@@ -55,16 +57,15 @@ type MonitorTask struct {
  * @receiver mt
  * @param name
  * @param ip
- * @param scanInt
  * @return error
  */
-func (mt *MonitorTask) AddTask(name string, ip string, scanInt int) error {
+func (mt *MonitorTask) AddTask(name string, ip string) error {
 	if name == "" || ip == "" {
 		return errors.New("task name or ip is empty")
 	}
 	for _, task := range mt.Tasks {
 		if task.TaskName == name && task.HostIp == ip {
-			return errors.New("this monitor task is existed")
+			return errors.New("this monitor task has been existed")
 		}
 	}
 	ip_path := filepath.Join(task_dir, ip)
@@ -72,19 +73,21 @@ func (mt *MonitorTask) AddTask(name string, ip string, scanInt int) error {
 		_ = utils.CreateDir(ip_path)
 	}
 	id := uuid.New()
-	file_path := ip_path + string(os.PathSeparator) + name + id + ".log"
+	file_path := ip_path + string(os.PathSeparator) + name + "_" + id + ".log"
 	f, l := utils.CreateFile(file_path)
+	//fmt.Println(f, l)
 	newTask := &TaskInfo{
-		TaskId:   id,
-		TaskName: name,
-		TaskTime: time.Now().Unix(),
-		HostIp:   ip,
-		PId:      0,
-		file:     f,
-		logger:   l,
+		TaskId:    id,
+		TaskName:  name,
+		TaskTime:  time.Now().Unix(),
+		HostIp:    ip,
+		PId:       0,
+		CoreCount: MyCoreCount,
+		File:      f,
+		Logger:    l,
 	}
-	task_json, _ := json.Marshal(newTask)
-	l.Println(string(task_json))
+	//task_json, _ := json.Marshal(newTask)
+	//l.Println(string(task_json))
 	mt.Tasks = append(mt.Tasks, *newTask)
 	return nil
 }
@@ -98,25 +101,37 @@ func (mt *MonitorTask) DelTask(id string) error {
 		if task.TaskId == id {
 			mt.Tasks = append(mt.Tasks[:index], mt.Tasks[index+1:]...)
 			del_falg = true
-			task.file.Close()
+			task.File.Close()
 			break
 		}
 	}
 	if del_falg {
 		return nil
 	} else {
-		return errors.New("this monitor id is not existed")
+		return errors.New("this monitor id does not exist")
 	}
 }
 
 func CloseAllFile(mt *MonitorTask) {
 	for _, task := range mt.Tasks {
 		for {
-			err := task.file.Close()
+			err := task.File.Close()
 			if err != nil {
 				continue
 			}
 			break
 		}
+	}
+}
+
+/**
+ * @Description: 操作系统内核数,非逻辑内核
+ * @return int
+ */
+func GetCoreCount() int {
+	if core_count, err := cpu.Counts(false); err != nil {
+		return 1
+	} else {
+		return core_count
 	}
 }
