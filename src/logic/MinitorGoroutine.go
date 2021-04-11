@@ -25,6 +25,9 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 			//task.Logger.Printf("%s test\n",task.TaskName)
 			//task_json, _ := json.Marshal(task)
 			//fmt.Println(string(task_json))
+			if !task.Status {
+				continue
+			}
 			var current_pid uint32 = 0
 			// 先在用户进程中检索,再在服务进程检索
 			if proc, err := utils.GetPidByWmiProcess(task.TaskName); err == nil {

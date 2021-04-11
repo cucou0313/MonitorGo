@@ -20,6 +20,8 @@ func InitRouter() *gin.Engine {
 		task.GET("/get", controller.GetTaskHandler)
 		task.GET("/add", controller.AddTaskHandler)
 		task.GET("/del", controller.DelTaskHandler)
+		task.GET("/start", controller.StartTaskHandler)
+		task.GET("/stop", controller.StopTaskHandler)
 	}
 
 	res := router.Group("/res")

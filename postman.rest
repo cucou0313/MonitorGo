@@ -1,5 +1,5 @@
 ### monitor get all tasks
-GET http://{{host}}:10000/task/get
+GET http://127.0.0.1:10000/task/get
 Accept: application/json
 
 ### monitor add task

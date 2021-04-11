@@ -30,18 +30,24 @@ func init() {
 }
 
 type TaskInterface interface {
-	AddTask(name string, ip string, scanInt int) error
+	AddTask(name string, ip string) error
+	StartTask(id string) error
+	StopTask(id string) error
 	DelTask(id string) error
 }
 
 type TaskInfo struct {
 	TaskId   string `json:"TaskId"`
 	TaskName string `json:"TaskName"`
+	// 设置持续写日志24小时
 	TaskTime int64  `json:"TaskTime"`
 	HostIp   string `json:"HostIp"`
+	// Status任务是否启动
+	Status bool `json:"Status"`
 	// 初始pid=0
-	PId       uint32 `json:"PId"`
-	CoreCount int    `json:"CoreCount"`
+	PId uint32 `json:"PId"`
+	// 系统
+	CoreCount int `json:"CoreCount"`
 	// 该任务的日志采集文件指针
 	File *os.File `json:"File,omitempty"`
 	// 该任务的log.Logger指针
@@ -79,7 +85,8 @@ func (mt *MonitorTask) AddTask(name string, ip string) error {
 	newTask := &TaskInfo{
 		TaskId:    id,
 		TaskName:  name,
-		TaskTime:  time.Now().Unix(),
+		TaskTime:  0,
+		Status:    false,
 		HostIp:    ip,
 		PId:       0,
 		CoreCount: MyCoreCount,
@@ -92,24 +99,45 @@ func (mt *MonitorTask) AddTask(name string, ip string) error {
 	return nil
 }
 
+func (mt *MonitorTask) StartTask(id string) error {
+	if id == "" {
+		return errors.New("task id is empty")
+	}
+	for _, task := range mt.Tasks {
+		if task.TaskId == id {
+			task.Status = true
+			task.TaskTime = time.Now().Unix()
+			return nil
+		}
+	}
+	return errors.New("this monitor task id does not exist")
+}
+
+func (mt *MonitorTask) StopTask(id string) error {
+	if id == "" {
+		return errors.New("task id is empty")
+	}
+	for _, task := range mt.Tasks {
+		if task.TaskId == id {
+			task.Status = false
+			return nil
+		}
+	}
+	return errors.New("this monitor task id does not exist")
+}
+
 func (mt *MonitorTask) DelTask(id string) error {
 	if id == "" {
 		return errors.New("task id is empty")
 	}
-	del_falg := false
 	for index, task := range mt.Tasks {
 		if task.TaskId == id {
 			mt.Tasks = append(mt.Tasks[:index], mt.Tasks[index+1:]...)
-			del_falg = true
 			task.File.Close()
-			break
+			return nil
 		}
 	}
-	if del_falg {
-		return nil
-	} else {
-		return errors.New("this monitor id does not exist")
-	}
+	return errors.New("this monitor task id does not exist")
 }
 
 func CloseAllFile(mt *MonitorTask) {

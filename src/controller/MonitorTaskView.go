@@ -49,6 +49,38 @@ func AddTaskHandler(ctx *gin.Context) {
 	}
 }
 
+func StartTaskHandler(ctx *gin.Context) {
+	id := ctx.Query("id")
+	err := models.MyMonitorTask.StartTask(id)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"errCode": 1,
+			"errMsg":  err.Error(),
+		})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{
+			"errCode": 0,
+			"Msg":     fmt.Sprintf("Start this task successfully,id=%s", id),
+		})
+	}
+}
+
+func StopTaskHandler(ctx *gin.Context) {
+	id := ctx.Query("id")
+	err := models.MyMonitorTask.StopTask(id)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"errCode": 1,
+			"errMsg":  err.Error(),
+		})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{
+			"errCode": 0,
+			"Msg":     fmt.Sprintf("Stop this task successfully,id=%s", id),
+		})
+	}
+}
+
 func DelTaskHandler(ctx *gin.Context) {
 	id := ctx.Query("id")
 	err := models.MyMonitorTask.DelTask(id)
