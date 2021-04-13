@@ -8,6 +8,8 @@ IDE: GoLand
 package main
 
 import (
+	"MonitorGo/src/logic"
+	"MonitorGo/src/models"
 	"MonitorGo/src/utils"
 	"MonitorGo/src/views"
 )
@@ -16,8 +18,8 @@ var mylog = utils.LogInit("main")
 
 func main() {
 	router := views.InitRouter()
-	//defer models.CloseAllFile(models.MyMonitorTask)
-	//go logic.RunMonitorTasks(models.MyMonitorTask)
+	defer models.CloseAllFile(models.MyMonitorTask)
+	go logic.RunMonitorTasks(models.MyMonitorTask)
 
 	mylog.Info("main start")
 	mylog.Info("start listen port 10000")

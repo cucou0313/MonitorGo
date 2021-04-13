@@ -23,7 +23,8 @@ func GetResHandler(ctx *gin.Context) {
 	resAll := make(map[string]interface{})
 	for _, task := range models.MyMonitorTask.Tasks {
 		if res := ReadResFromFile(task.File.Name()); res != nil {
-			resAll[task.TaskName] = res
+			name := fmt.Sprintf("%s(%s)", task.TaskName, task.HostIp)
+			resAll[name] = res
 		}
 		fmt.Println("for task", resAll)
 	}
@@ -33,7 +34,7 @@ func GetResHandler(ctx *gin.Context) {
 	})
 }
 
-func ReadResFromFile(file_path string) []logic.ProcessResJson {
+func ReadResFromFile(file_path string) []logic.MonitorResJson {
 	f, err := os.Open(file_path)
 	if err != nil {
 		fmt.Println("open error")
@@ -41,7 +42,7 @@ func ReadResFromFile(file_path string) []logic.ProcessResJson {
 	}
 	defer f.Close()
 	fs := bufio.NewScanner(f)
-	var resAll []logic.ProcessResJson
+	var resAll []logic.MonitorResJson
 	for fs.Scan() {
 		line := fs.Text()
 		fmt.Println(line)
@@ -54,10 +55,10 @@ func ReadResFromFile(file_path string) []logic.ProcessResJson {
 	return resAll
 }
 
-func ResParser(line string) *logic.ProcessResJson {
+func ResParser(line string) *logic.MonitorResJson {
 	space_pos := strings.LastIndex(line, " ")
 	res_string := line[space_pos+1:]
-	res_json := new(logic.ProcessResJson)
+	res_json := new(logic.MonitorResJson)
 	err := json.Unmarshal([]byte(res_string), res_json)
 	if err != nil {
 		fmt.Println(err.Error())

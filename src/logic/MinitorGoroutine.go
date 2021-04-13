@@ -12,12 +12,15 @@ import (
 	"MonitorGo/src/utils"
 	"encoding/json"
 	"fmt"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/process"
+	"strconv"
 	"time"
 )
 
-// 全局扫描间隔 Minute
-var ScanInterval uint = 30
+// ScanInterval 全局扫描间隔 Minute
+var ScanInterval uint = 1
 
 func RunMonitorTasks(mt *models.MonitorTask) {
 	for {
@@ -25,6 +28,7 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 			//task.Logger.Printf("%s test\n",task.TaskName)
 			//task_json, _ := json.Marshal(task)
 			//fmt.Println(string(task_json))
+			fmt.Println("RunMonitorTasks", task.Status)
 			if !task.Status {
 				continue
 			}
@@ -40,34 +44,76 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 			task.PId = current_pid
 			if task.PId > 0 {
 				proc, err := process.NewProcess(int32(task.PId))
+				sys_cpu, _ := cpu.Percent(time.Second*2, false)
+				sys_mem, _ := mem.VirtualMemory()
+				var pro_cpu float64
+				var pro_mem float32
+				var pro_rss uint64
 				if err != nil {
-					//fmt.Println(err.Error())
-					task.Logger.Printf("Process does not exist,PID=%d,err=%s\n", task.PId, err.Error())
+					fmt.Println(err.Error())
+					//task.Logger.Printf("Process does not exist,PID=%d,err=%s\n", task.PId, err.Error())
 				} else {
-					cpu_rate, _ := proc.Percent(time.Second * 2)
-					mem_rate, _ := proc.MemoryPercent()
+					pro_cpu, _ = proc.Percent(time.Second * 2)
+					pro_cpu = pro_cpu / float64(task.CoreCount)
+					pro_mem, _ = proc.MemoryPercent()
 					mem_info, _ := proc.MemoryInfo()
-					mem_rss := mem_info.RSS
-					mem_pretty := mem_rss / (1024 * 1024)
-					procJson := &ProcessResJson{
-						CpuRate:   fmt.Sprintf("%.2f", cpu_rate/float64(task.CoreCount)),
-						MemRate:   fmt.Sprintf("%.2f", mem_rate),
-						MemRss:    fmt.Sprintf("%dMB", mem_pretty),
-						Timestamp: time.Now().Unix(),
-					}
-					jsonBytes, _ := json.Marshal(procJson)
-					//fmt.Println(cpu_rate, mem_rate, mem_info.String())
-					task.Logger.Println(string(jsonBytes))
+					pro_rss = mem_info.RSS
 				}
+				resJson := &MonitorResJson{
+					SystemCPU: LineChartJson{
+						Value: Decimal(sys_cpu[0]),
+						More:  fmt.Sprintf("(%d核%d线程)", task.CoreCount, task.LogicalCoreCount),
+					},
+					SystemMem: LineChartJson{
+						Value: sys_mem.UsedPercent,
+						More:  fmt.Sprintf("(%.2fMB)", GetPrettyMem(sys_mem.Used, "GB")),
+					},
+					ProcessCPU: LineChartJson{
+						Value: Decimal(pro_cpu),
+						More:  "",
+					},
+					ProcessMem: LineChartJson{
+						Value: float64(pro_mem),
+						More:  fmt.Sprintf("(%.2fMB)", GetPrettyMem(pro_rss, "MB")),
+					},
+					DataTime: time.Now().Format("2006-01-02 15:04:05"),
+				}
+				jsonBytes, _ := json.Marshal(resJson)
+				fmt.Println(string(jsonBytes))
+				//task.Logger.Println(string(jsonBytes))
 			}
 		}
-		time.Sleep(time.Second * time.Duration(ScanInterval))
+		time.Sleep(time.Second * 10 * time.Duration(ScanInterval))
 	}
 }
 
-type ProcessResJson struct {
-	CpuRate   string `json:"CpuRate"`
-	MemRate   string `json:"MemRate"`
-	MemRss    string `json:"MemRss"`
-	Timestamp int64  `json:"Timestamp"`
+type MonitorResJson struct {
+	SystemCPU  LineChartJson `json:"SystemCPU"`
+	SystemMem  LineChartJson `json:"SystemMem"`
+	ProcessCPU LineChartJson `json:"ProcessCPU"`
+	ProcessMem LineChartJson `json:"ProcessMem"`
+	DataTime   string        `json:"DataTime"`
+}
+
+type LineChartJson struct {
+	Value float64 `json:"value"`
+	More  string  `json:"more"`
+}
+
+func Decimal(value float64) float64 {
+	value, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", value), 64)
+	return value
+}
+
+func GetPrettyMem(value uint64, format string) float64 {
+	switch format {
+	case "KB":
+		return float64(value) / 1024
+	case "MB":
+		return float64(value) / (1024 * 1024)
+	case "GB":
+		return float64(value) / (1024 * 1024 * 1024)
+	default:
+		return float64(value)
+	}
 }

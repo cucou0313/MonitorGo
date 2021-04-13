@@ -28,15 +28,21 @@ func InitRouter() *gin.Engine {
 
 	task := router.Group("/task")
 	{
+		//监控任务信息
 		task.GET("/get", controller.GetTaskHandler)
+		//添加监控任务
 		task.GET("/add", controller.AddTaskHandler)
+		//删除监控任务
 		task.GET("/del", controller.DelTaskHandler)
+		//启动监控任务
 		task.GET("/start", controller.StartTaskHandler)
+		//停止监控任务
 		task.GET("/stop", controller.StopTaskHandler)
 	}
 
 	res := router.Group("/res")
 	{
+		//读取监控结果
 		res.GET("/get", controller.GetResHandler)
 	}
 

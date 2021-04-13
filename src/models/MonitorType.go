@@ -10,6 +10,7 @@ package models
 import (
 	"MonitorGo/src/utils"
 	"errors"
+	"fmt"
 	"github.com/go-basic/uuid"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"log"
@@ -21,6 +22,7 @@ import (
 var MyMonitorTask = new(MonitorTask)
 var task_dir = filepath.Join(utils.GetExecPath(), "TaskLog")
 var MyCoreCount = GetCoreCount()
+var MyLogicalCoreCount = GetLogicalCoreCount()
 
 // 创建task日志路径
 func init() {
@@ -47,7 +49,8 @@ type TaskInfo struct {
 	// 初始pid=0
 	PId uint32 `json:"PId"`
 	// 系统
-	CoreCount int `json:"CoreCount"`
+	CoreCount        int `json:"CoreCount"`
+	LogicalCoreCount int `json:"LogicalCoreCount"`
 	// 该任务的日志采集文件指针
 	File *os.File `json:"File,omitempty"`
 	// 该任务的log.Logger指针
@@ -83,15 +86,16 @@ func (mt *MonitorTask) AddTask(name string, ip string) error {
 	f, l := utils.CreateFile(file_path)
 	//fmt.Println(f, l)
 	newTask := &TaskInfo{
-		TaskId:    id,
-		TaskName:  name,
-		TaskTime:  0,
-		Status:    false,
-		HostIp:    ip,
-		PId:       0,
-		CoreCount: MyCoreCount,
-		File:      f,
-		Logger:    l,
+		TaskId:           id,
+		TaskName:         name,
+		TaskTime:         0,
+		Status:           false,
+		HostIp:           ip,
+		PId:              0,
+		CoreCount:        MyCoreCount,
+		LogicalCoreCount: MyLogicalCoreCount,
+		File:             f,
+		Logger:           l,
 	}
 	//task_json, _ := json.Marshal(newTask)
 	//l.Println(string(task_json))
@@ -105,8 +109,11 @@ func (mt *MonitorTask) StartTask(id string) error {
 	}
 	for _, task := range mt.Tasks {
 		if task.TaskId == id {
+			fmt.Println("pre", task.Status)
 			task.Status = true
+			fmt.Println("back", task.Status)
 			task.TaskTime = time.Now().Unix()
+			fmt.Println(task)
 			return nil
 		}
 	}
@@ -158,6 +165,14 @@ func CloseAllFile(mt *MonitorTask) {
  */
 func GetCoreCount() int {
 	if core_count, err := cpu.Counts(false); err != nil {
+		return 1
+	} else {
+		return core_count
+	}
+}
+
+func GetLogicalCoreCount() int {
+	if core_count, err := cpu.Counts(true); err != nil {
 		return 1
 	} else {
 		return core_count
