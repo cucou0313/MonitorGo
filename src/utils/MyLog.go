@@ -11,7 +11,6 @@ import (
 	"fmt"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -97,14 +96,11 @@ func GetExecPath() string {
  * @Description: Monitor任务采集日志保存
  * @param file_path  日志文件路径
  * @return *os.File 读写日志文件的指针,用于主程序退出时close
- * @return *log.Logger 返回一个logger指针,可直接使用go log的相关方法
  */
-func CreateFile(file_path string) (*os.File, *log.Logger) {
+func CreateFile(file_path string) *os.File {
 	f, err := os.OpenFile(file_path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		return nil, nil
+		return nil
 	}
-	l := log.New(f, "", log.LstdFlags)
-
-	return f, l
+	return f
 }

@@ -10,10 +10,8 @@ package models
 import (
 	"MonitorGo/src/utils"
 	"errors"
-	"fmt"
 	"github.com/go-basic/uuid"
 	"github.com/shirou/gopsutil/v3/cpu"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -48,17 +46,15 @@ type TaskInfo struct {
 	Status bool `json:"Status"`
 	// 初始pid=0
 	PId uint32 `json:"PId"`
-	// 系统
+	// 系统内核数
 	CoreCount        int `json:"CoreCount"`
 	LogicalCoreCount int `json:"LogicalCoreCount"`
 	// 该任务的日志采集文件指针
 	File *os.File `json:"File,omitempty"`
-	// 该任务的log.Logger指针
-	Logger *log.Logger `json:"Logger,omitempty"`
 }
 
 type MonitorTask struct {
-	Tasks []TaskInfo
+	Tasks []*TaskInfo
 }
 
 /**
@@ -83,7 +79,7 @@ func (mt *MonitorTask) AddTask(name string, ip string) error {
 	}
 	id := uuid.New()
 	file_path := ip_path + string(os.PathSeparator) + name + "_" + id + ".log"
-	f, l := utils.CreateFile(file_path)
+	f := utils.CreateFile(file_path)
 	//fmt.Println(f, l)
 	newTask := &TaskInfo{
 		TaskId:           id,
@@ -95,11 +91,10 @@ func (mt *MonitorTask) AddTask(name string, ip string) error {
 		CoreCount:        MyCoreCount,
 		LogicalCoreCount: MyLogicalCoreCount,
 		File:             f,
-		Logger:           l,
 	}
 	//task_json, _ := json.Marshal(newTask)
 	//l.Println(string(task_json))
-	mt.Tasks = append(mt.Tasks, *newTask)
+	mt.Tasks = append(mt.Tasks, newTask)
 	return nil
 }
 
@@ -109,11 +104,8 @@ func (mt *MonitorTask) StartTask(id string) error {
 	}
 	for _, task := range mt.Tasks {
 		if task.TaskId == id {
-			fmt.Println("pre", task.Status)
 			task.Status = true
-			fmt.Println("back", task.Status)
 			task.TaskTime = time.Now().Unix()
-			fmt.Println(task)
 			return nil
 		}
 	}

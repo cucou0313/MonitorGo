@@ -1,5 +1,5 @@
 ### monitor get all tasks
-GET http://10.65.10.187:10000/task/get
+GET http://{{host}}:10000/task/get
 Accept: application/json
 
 ### monitor add task
@@ -7,15 +7,15 @@ GET http://{{host}}:10000/task/add?name={{name}}&ip={{ip}}
 Accept: application/json
 
 ### monitor del task
-GET http://{{host}}:10000/task/del?id={{id}}
+GET http://{{host}}:10000/task/del?id=d2b066d3-47b2-a714-624d-aa3316165d64
 Accept: application/json
 
 ### monitor start task
-GET http://{{host}}:10000/task/start?id=cd0d001c-d38d-691f-6b65-d42b1c6372da
+GET http://{{host}}:10000/task/start?id=1125bf42-2c24-82a2-45b4-eb52ce557077
 Accept: application/json
 
 ### monitor stop task
-GET http://{{host}}:10000/task/stop?id={{id}}
+GET http://{{host}}:10000/task/stop?id=d2b066d3-47b2-a714-624d-aa3316165d64
 Accept: application/json
 
 ### monitor get res

@@ -28,7 +28,6 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 			//task.Logger.Printf("%s test\n",task.TaskName)
 			//task_json, _ := json.Marshal(task)
 			//fmt.Println(string(task_json))
-			fmt.Println("RunMonitorTasks", task.Status)
 			if !task.Status {
 				continue
 			}
@@ -51,7 +50,7 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 				var pro_rss uint64
 				if err != nil {
 					fmt.Println(err.Error())
-					//task.Logger.Printf("Process does not exist,PID=%d,err=%s\n", task.PId, err.Error())
+					task.File.WriteString(fmt.Sprintf("Process does not exist,PID=%d,err=%s\n", task.PId, err.Error()))
 				} else {
 					pro_cpu, _ = proc.Percent(time.Second * 2)
 					pro_cpu = pro_cpu / float64(task.CoreCount)
@@ -66,21 +65,21 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 					},
 					SystemMem: LineChartJson{
 						Value: sys_mem.UsedPercent,
-						More:  fmt.Sprintf("(%.2fMB)", GetPrettyMem(sys_mem.Used, "GB")),
+						More:  fmt.Sprintf("(%.2fGB)", GetPrettyMem(sys_mem.Used, "GB")),
 					},
 					ProcessCPU: LineChartJson{
 						Value: Decimal(pro_cpu),
 						More:  "",
 					},
 					ProcessMem: LineChartJson{
-						Value: float64(pro_mem),
+						Value: Decimal(float64(pro_mem)),
 						More:  fmt.Sprintf("(%.2fMB)", GetPrettyMem(pro_rss, "MB")),
 					},
 					DataTime: time.Now().Format("2006-01-02 15:04:05"),
 				}
 				jsonBytes, _ := json.Marshal(resJson)
-				fmt.Println(string(jsonBytes))
-				//task.Logger.Println(string(jsonBytes))
+				//fmt.Println(string(jsonBytes))
+				task.File.WriteString(string(jsonBytes) + "\n")
 			}
 		}
 		time.Sleep(time.Second * 10 * time.Duration(ScanInterval))
@@ -93,6 +92,16 @@ type MonitorResJson struct {
 	ProcessCPU LineChartJson `json:"ProcessCPU"`
 	ProcessMem LineChartJson `json:"ProcessMem"`
 	DataTime   string        `json:"DataTime"`
+}
+
+// AppResJson 发给前端的数据结构
+type AppResJson struct {
+	ChartName  string          `json:"ChartName"`
+	SystemCPU  []LineChartJson `json:"SystemCPU"`
+	SystemMem  []LineChartJson `json:"SystemMem"`
+	ProcessCPU []LineChartJson `json:"ProcessCPU"`
+	ProcessMem []LineChartJson `json:"ProcessMem"`
+	DataTime   []string        `json:"DataTime"`
 }
 
 type LineChartJson struct {

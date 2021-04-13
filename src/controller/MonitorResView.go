@@ -16,25 +16,25 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
-	"strings"
 )
 
 func GetResHandler(ctx *gin.Context) {
 	resAll := make(map[string]interface{})
-	for _, task := range models.MyMonitorTask.Tasks {
+	for i, task := range models.MyMonitorTask.Tasks {
 		if res := ReadResFromFile(task.File.Name()); res != nil {
-			name := fmt.Sprintf("%s(%s)", task.TaskName, task.HostIp)
-			resAll[name] = res
+			res.ChartName = fmt.Sprintf("%s(%s)", task.TaskName, task.HostIp)
+			resAll[fmt.Sprintf("data%d", i)] = res
 		}
-		fmt.Println("for task", resAll)
 	}
+	js, _ := json.Marshal(resAll)
+	fmt.Println("for task", string(js))
 	ctx.JSON(http.StatusOK, gin.H{
 		"errCode": 0,
 		"data":    resAll,
 	})
 }
 
-func ReadResFromFile(file_path string) []logic.MonitorResJson {
+func ReadResFromFile(file_path string) *logic.AppResJson {
 	f, err := os.Open(file_path)
 	if err != nil {
 		fmt.Println("open error")
@@ -42,24 +42,26 @@ func ReadResFromFile(file_path string) []logic.MonitorResJson {
 	}
 	defer f.Close()
 	fs := bufio.NewScanner(f)
-	var resAll []logic.MonitorResJson
+	var res = &logic.AppResJson{}
 	for fs.Scan() {
 		line := fs.Text()
 		fmt.Println(line)
 		// process txt
 		if each_res := ResParser(line); each_res != nil {
-			resAll = append(resAll, *each_res)
+			res.SystemCPU = append(res.ProcessCPU, each_res.SystemCPU)
+			res.SystemMem = append(res.SystemMem, each_res.SystemMem)
+			res.ProcessCPU = append(res.ProcessCPU, each_res.ProcessCPU)
+			res.ProcessMem = append(res.ProcessMem, each_res.ProcessMem)
+			res.DataTime = append(res.DataTime, each_res.DataTime)
 		}
 	}
-	fmt.Println("resAll", resAll)
-	return resAll
+	fmt.Println("resAll", res)
+	return res
 }
 
 func ResParser(line string) *logic.MonitorResJson {
-	space_pos := strings.LastIndex(line, " ")
-	res_string := line[space_pos+1:]
 	res_json := new(logic.MonitorResJson)
-	err := json.Unmarshal([]byte(res_string), res_json)
+	err := json.Unmarshal([]byte(line), res_json)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil
