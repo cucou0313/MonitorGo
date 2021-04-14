@@ -19,16 +19,31 @@ import (
 	"time"
 )
 
-// ScanInterval 全局扫描间隔 Minute
-var ScanInterval uint = 1
+// ScanInterval 全局扫描间隔 Second
+var ScanInterval uint = 30
 
 func RunMonitorTasks(mt *models.MonitorTask) {
 	for {
+		timeStart := time.Now().Local()
+		var SysCpuRate float64
+		var SysMemRate float64
+		var SysMemValue uint64
+		if mt.CollectSysInfo {
+			c, _ := cpu.Percent(time.Second*2, false)
+			m, _ := mem.VirtualMemory()
+			SysCpuRate = c[0]
+			SysMemRate = m.UsedPercent
+			SysMemValue = m.Used
+		}
 		for _, task := range mt.Tasks {
-			//task.Logger.Printf("%s test\n",task.TaskName)
-			//task_json, _ := json.Marshal(task)
-			//fmt.Println(string(task_json))
 			if !task.Status {
+				continue
+			}
+			//日志默认只写24小时, 防止写入过多无法导出
+			timeNow := time.Now().Local()
+			subDay := timeNow.Sub(task.TaskTime).Hours()
+			if subDay > 24 {
+				task.Status = false
 				continue
 			}
 			var current_pid uint32 = 0
@@ -41,10 +56,9 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 				}
 			}
 			task.PId = current_pid
+			resJson := new(MonitorResJson)
 			if task.PId > 0 {
 				proc, err := process.NewProcess(int32(task.PId))
-				sys_cpu, _ := cpu.Percent(time.Second*2, false)
-				sys_mem, _ := mem.VirtualMemory()
 				var pro_cpu float64
 				var pro_mem float32
 				var pro_rss uint64
@@ -53,55 +67,60 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 					task.File.WriteString(fmt.Sprintf("Process does not exist,PID=%d,err=%s\n", task.PId, err.Error()))
 				} else {
 					pro_cpu, _ = proc.Percent(time.Second * 2)
-					pro_cpu = pro_cpu / float64(task.CoreCount)
+					pro_cpu = pro_cpu / float64(mt.CoreCount)
 					pro_mem, _ = proc.MemoryPercent()
 					mem_info, _ := proc.MemoryInfo()
 					pro_rss = mem_info.RSS
 				}
-				resJson := &MonitorResJson{
-					SystemCPU: LineChartJson{
-						Value: Decimal(sys_cpu[0]),
-						More:  fmt.Sprintf("(%d核%d线程)", task.CoreCount, task.LogicalCoreCount),
-					},
-					SystemMem: LineChartJson{
-						Value: sys_mem.UsedPercent,
-						More:  fmt.Sprintf("(%.2fGB)", GetPrettyMem(sys_mem.Used, "GB")),
-					},
-					ProcessCPU: LineChartJson{
-						Value: Decimal(pro_cpu),
-						More:  "",
-					},
-					ProcessMem: LineChartJson{
-						Value: Decimal(float64(pro_mem)),
-						More:  fmt.Sprintf("(%.2fMB)", GetPrettyMem(pro_rss, "MB")),
-					},
-					DataTime: time.Now().Format("2006-01-02 15:04:05"),
+				resJson.ProcessCpu = LineChartJson{
+					Value: Decimal(pro_cpu),
+					More:  "",
 				}
-				jsonBytes, _ := json.Marshal(resJson)
-				//fmt.Println(string(jsonBytes))
-				task.File.WriteString(string(jsonBytes) + "\n")
+				resJson.ProcessMem = LineChartJson{
+					Value: Decimal(float64(pro_mem)),
+					More:  fmt.Sprintf("(%.2fMB)", GetPrettyMem(pro_rss, "MB")),
+				}
+				resJson.DateTime = time.Now().Format("2006-01-02 15:04:05")
 			}
+
+			if mt.CollectSysInfo {
+				resJson.SystemCpu = LineChartJson{
+					Value: Decimal(SysCpuRate),
+					More:  fmt.Sprintf("(%d核%d线程)", mt.CoreCount, mt.LogicalCoreCount),
+				}
+				resJson.SystemMem = LineChartJson{
+					Value: SysMemRate,
+					More:  fmt.Sprintf("(%.2fGB)", GetPrettyMem(SysMemValue, "GB")),
+				}
+			}
+			jsonBytes, _ := json.Marshal(resJson)
+			//fmt.Println(string(jsonBytes))
+			task.File.WriteString(string(jsonBytes) + "\n")
 		}
-		time.Sleep(time.Second * 10 * time.Duration(ScanInterval))
+		timeEnd := time.Now().Local()
+		subSecond := timeEnd.Sub(timeStart).Milliseconds()
+		trueSleep := time.Millisecond * time.Duration(int64(ScanInterval*1000)-subSecond)
+		fmt.Println(trueSleep)
+		time.Sleep(trueSleep)
 	}
 }
 
 type MonitorResJson struct {
-	SystemCPU  LineChartJson `json:"SystemCPU"`
+	SystemCpu  LineChartJson `json:"SystemCpu"`
 	SystemMem  LineChartJson `json:"SystemMem"`
-	ProcessCPU LineChartJson `json:"ProcessCPU"`
+	ProcessCpu LineChartJson `json:"ProcessCpu"`
 	ProcessMem LineChartJson `json:"ProcessMem"`
-	DataTime   string        `json:"DataTime"`
+	DateTime   string        `json:"DateTime"`
 }
 
 // AppResJson 发给前端的数据结构
 type AppResJson struct {
 	ChartName  string          `json:"ChartName"`
-	SystemCPU  []LineChartJson `json:"SystemCPU"`
+	SystemCpu  []LineChartJson `json:"SystemCpu"`
 	SystemMem  []LineChartJson `json:"SystemMem"`
-	ProcessCPU []LineChartJson `json:"ProcessCPU"`
+	ProcessCpu []LineChartJson `json:"ProcessCpu"`
 	ProcessMem []LineChartJson `json:"ProcessMem"`
-	DataTime   []string        `json:"DataTime"`
+	DateTime   []string        `json:"DateTime"`
 }
 
 type LineChartJson struct {

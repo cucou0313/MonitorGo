@@ -25,7 +25,4 @@ func main() {
 	mylog.Info("start listen port 10000")
 
 	router.Run(":10000")
-	//models.MyMonitorTask.AddTask("test", "0.0.0.0")
-	//task_id := models.MyMonitorTask.Tasks[0].TaskId
-	//models.MyMonitorTask.StartTask(task_id)
 }

@@ -17,10 +17,12 @@ import (
 	"time"
 )
 
-var MyMonitorTask = new(MonitorTask)
+var MyMonitorTask = &MonitorTask{
+	CoreCount:        GetCoreCount(),
+	LogicalCoreCount: GetLogicalCoreCount(),
+	CollectSysInfo:   false,
+}
 var task_dir = filepath.Join(utils.GetExecPath(), "TaskLog")
-var MyCoreCount = GetCoreCount()
-var MyLogicalCoreCount = GetLogicalCoreCount()
 
 // 创建task日志路径
 func init() {
@@ -34,27 +36,30 @@ type TaskInterface interface {
 	StartTask(id string) error
 	StopTask(id string) error
 	DelTask(id string) error
+	GetRunningNum() int
 }
 
 type TaskInfo struct {
 	TaskId   string `json:"TaskId"`
 	TaskName string `json:"TaskName"`
 	// 设置持续写日志24小时
-	TaskTime int64  `json:"TaskTime"`
-	HostIp   string `json:"HostIp"`
+	TaskTime time.Time `json:"TaskTime"`
+	HostIp   string    `json:"HostIp"`
 	// Status任务是否启动
 	Status bool `json:"Status"`
 	// 初始pid=0
 	PId uint32 `json:"PId"`
-	// 系统内核数
-	CoreCount        int `json:"CoreCount"`
-	LogicalCoreCount int `json:"LogicalCoreCount"`
 	// 该任务的日志采集文件指针
 	File *os.File `json:"File,omitempty"`
 }
 
 type MonitorTask struct {
 	Tasks []*TaskInfo
+	// 系统内核数
+	CoreCount        int
+	LogicalCoreCount int
+	// 是否同步采集系统信息
+	CollectSysInfo bool
 }
 
 /**
@@ -82,15 +87,13 @@ func (mt *MonitorTask) AddTask(name string, ip string) error {
 	f := utils.CreateFile(file_path)
 	//fmt.Println(f, l)
 	newTask := &TaskInfo{
-		TaskId:           id,
-		TaskName:         name,
-		TaskTime:         0,
-		Status:           false,
-		HostIp:           ip,
-		PId:              0,
-		CoreCount:        MyCoreCount,
-		LogicalCoreCount: MyLogicalCoreCount,
-		File:             f,
+		TaskId:   id,
+		TaskName: name,
+		TaskTime: time.Now(),
+		Status:   false,
+		HostIp:   ip,
+		PId:      0,
+		File:     f,
 	}
 	//task_json, _ := json.Marshal(newTask)
 	//l.Println(string(task_json))
@@ -105,7 +108,7 @@ func (mt *MonitorTask) StartTask(id string) error {
 	for _, task := range mt.Tasks {
 		if task.TaskId == id {
 			task.Status = true
-			task.TaskTime = time.Now().Unix()
+			task.TaskTime = time.Now().Local()
 			return nil
 		}
 	}
@@ -137,6 +140,16 @@ func (mt *MonitorTask) DelTask(id string) error {
 		}
 	}
 	return errors.New("this monitor task id does not exist")
+}
+
+func (mt *MonitorTask) GetRunningNum() int {
+	var runningNum int
+	for _, task := range mt.Tasks {
+		if task.Status == true {
+			runningNum++
+		}
+	}
+	return runningNum
 }
 
 func CloseAllFile(mt *MonitorTask) {

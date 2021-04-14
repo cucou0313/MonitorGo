@@ -2,8 +2,16 @@
 GET http://{{host}}:10000/task/get
 Accept: application/json
 
+### monitor open sys
+GET http://{{host}}:10000/task/open_system?flag=true
+Accept: application/json
+
+### monitor test task
+GET http://{{host}}:10000/task/test?name={{name}}
+Accept: application/json
+
 ### monitor add task
-GET http://{{host}}:10000/task/add?name={{name}}&ip={{ip}}
+GET http://{{host}}:10000/task/add?name=Code.exe&ip={{ip}}
 Accept: application/json
 
 ### monitor del task
@@ -11,11 +19,11 @@ GET http://{{host}}:10000/task/del?id=d2b066d3-47b2-a714-624d-aa3316165d64
 Accept: application/json
 
 ### monitor start task
-GET http://{{host}}:10000/task/start?id=1125bf42-2c24-82a2-45b4-eb52ce557077
+GET http://{{host}}:10000/task/start?id=4f3c8617-d951-1cf1-460e-1294e7533ae3
 Accept: application/json
 
 ### monitor stop task
-GET http://{{host}}:10000/task/stop?id=d2b066d3-47b2-a714-624d-aa3316165d64
+GET http://{{host}}:10000/task/stop?id=a32fcdea-ebb8-a342-cfb1-41dae9219060
 Accept: application/json
 
 ### monitor get res
