@@ -74,7 +74,7 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 				}
 				resJson.ProcessCpu = LineChartJson{
 					Value: Decimal(pro_cpu),
-					More:  "",
+					More:  fmt.Sprintf("(PID:%d)", task.PId),
 				}
 				resJson.ProcessMem = LineChartJson{
 					Value: Decimal(float64(pro_mem)),
@@ -100,7 +100,7 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 		timeEnd := time.Now().Local()
 		subSecond := timeEnd.Sub(timeStart).Milliseconds()
 		trueSleep := time.Millisecond * time.Duration(int64(ScanInterval*1000)-subSecond)
-		fmt.Println(trueSleep)
+		SendStatus(models.HostIp, models.ServerIp)
 		time.Sleep(trueSleep)
 	}
 }

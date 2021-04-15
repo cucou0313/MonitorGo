@@ -10,7 +10,6 @@ package controller
 import (
 	"MonitorGo/src/models"
 	"MonitorGo/src/utils"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -58,13 +57,9 @@ func OpenSysHandler(ctx *gin.Context) {
 }
 
 func GetTaskHandler(ctx *gin.Context) {
-	var data []map[string]interface{}
+	var data []models.TaskInfo
 	for _, task := range models.MyMonitorTask.Tasks {
-		var tmp map[string]interface{}
-		if task_json, err := json.Marshal(task); err == nil {
-			_ = json.Unmarshal(task_json, &tmp)
-			data = append(data, tmp)
-		}
+		data = append(data, *task)
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"Code": 0,

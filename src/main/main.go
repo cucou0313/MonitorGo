@@ -24,5 +24,5 @@ func main() {
 	mylog.Info("main start")
 	mylog.Info("start listen port 10000")
 
-	router.Run(":10000")
+	router.Run("0.0.0.0:10000")
 }

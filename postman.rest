@@ -11,7 +11,7 @@ GET http://{{host}}:10000/task/test?name={{name}}
 Accept: application/json
 
 ### monitor add task
-GET http://{{host}}:10000/task/add?name=Code.exe&ip={{ip}}
+GET http://{{host}}:10000/task/add?name=nsfagent&ip={{ip}}
 Accept: application/json
 
 ### monitor del task
@@ -19,7 +19,7 @@ GET http://{{host}}:10000/task/del?id=d2b066d3-47b2-a714-624d-aa3316165d64
 Accept: application/json
 
 ### monitor start task
-GET http://{{host}}:10000/task/start?id=4f3c8617-d951-1cf1-460e-1294e7533ae3
+GET http://{{host}}:10000/task/start?id=33ea8e4f-5769-0b31-afc2-0b767e773acf
 Accept: application/json
 
 ### monitor stop task

@@ -22,6 +22,9 @@ var MyMonitorTask = &MonitorTask{
 	LogicalCoreCount: GetLogicalCoreCount(),
 	CollectSysInfo:   false,
 }
+var IpList []string
+var HostIp = utils.GetHostIp()
+var ServerIp = "10.65.10.187"
 var task_dir = filepath.Join(utils.GetExecPath(), "TaskLog")
 
 // 创建task日志路径
