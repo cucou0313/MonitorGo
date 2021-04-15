@@ -24,7 +24,7 @@ var MyMonitorTask = &MonitorTask{
 }
 var IpList []string
 var HostIp = utils.GetHostIp()
-var ServerIp = "10.65.10.187"
+var ServerIp = HostIp
 var task_dir = filepath.Join(utils.GetExecPath(), "TaskLog")
 
 // 创建task日志路径
@@ -47,7 +47,6 @@ type TaskInfo struct {
 	TaskName string `json:"TaskName"`
 	// 设置持续写日志24小时
 	TaskTime time.Time `json:"TaskTime"`
-	HostIp   string    `json:"HostIp"`
 	// Status任务是否启动
 	Status bool `json:"Status"`
 	// 初始pid=0
@@ -72,21 +71,17 @@ type MonitorTask struct {
  * @param ip
  * @return error
  */
-func (mt *MonitorTask) AddTask(name string, ip string) error {
-	if name == "" || ip == "" {
-		return errors.New("task name or ip is empty")
+func (mt *MonitorTask) AddTask(name string) error {
+	if name == "" {
+		return errors.New("task name is empty")
 	}
 	for _, task := range mt.Tasks {
-		if task.TaskName == name && task.HostIp == ip {
+		if task.TaskName == name {
 			return errors.New("this monitor task has been existed")
 		}
 	}
-	ip_path := filepath.Join(task_dir, ip)
-	if !utils.FileExist(ip_path) {
-		_ = utils.CreateDir(ip_path)
-	}
 	id := uuid.New()
-	file_path := ip_path + string(os.PathSeparator) + name + "_" + id + ".log"
+	file_path := task_dir + string(os.PathSeparator) + name + "_" + id + ".log"
 	f := utils.CreateFile(file_path)
 	//fmt.Println(f, l)
 	newTask := &TaskInfo{
@@ -94,7 +89,6 @@ func (mt *MonitorTask) AddTask(name string, ip string) error {
 		TaskName: name,
 		TaskTime: time.Now(),
 		Status:   false,
-		HostIp:   ip,
 		PId:      0,
 		File:     f,
 	}

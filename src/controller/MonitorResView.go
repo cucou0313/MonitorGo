@@ -30,7 +30,7 @@ func GetResHandler(ctx *gin.Context) {
 	for _, task := range models.MyMonitorTask.Tasks {
 		if task.Status == true {
 			if res := ReadResFromFile(task.File.Name()); res != nil {
-				res.ChartName = fmt.Sprintf("%d.%s(%s)", chartNum, task.TaskName, task.HostIp)
+				res.ChartName = fmt.Sprintf("%d.%s(%s)", chartNum, task.TaskName, models.HostIp)
 				resAll[fmt.Sprintf("data%d", chartNum)] = res
 				chartNum++
 			}

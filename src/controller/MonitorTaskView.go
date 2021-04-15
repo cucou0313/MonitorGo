@@ -69,8 +69,7 @@ func GetTaskHandler(ctx *gin.Context) {
 
 func AddTaskHandler(ctx *gin.Context) {
 	name := ctx.Query("name")
-	ip := ctx.Query("ip")
-	err := models.MyMonitorTask.AddTask(name, ip)
+	err := models.MyMonitorTask.AddTask(name)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
 			"Code": 1,
@@ -79,7 +78,7 @@ func AddTaskHandler(ctx *gin.Context) {
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{
 			"Code": 0,
-			"Msg":  fmt.Sprintf("Add new task successfully,name=%s,ip=%s", name, ip),
+			"Msg":  fmt.Sprintf("Add new task successfully,name=%s ", name),
 		})
 	}
 }
