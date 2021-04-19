@@ -52,18 +52,31 @@ func OpenSysHandler(ctx *gin.Context) {
 	fmt.Println(models.MyMonitorTask.CollectSysInfo)
 	ctx.JSON(http.StatusOK, gin.H{
 		"Code": 0,
-		"Msg":  "Open system info collection success",
+		"Msg":  "Switch system info collection success",
 	})
 }
 
 func GetTaskHandler(ctx *gin.Context) {
 	var data []models.TaskInfo
+	var runCount = 0
+	var totalCount = len(models.MyMonitorTask.Tasks)
+	var taskStatus = gin.H{}
 	for _, task := range models.MyMonitorTask.Tasks {
+		if task.Status {
+			runCount++
+		}
+		taskStatus[task.TaskId] = task.Status
 		data = append(data, *task)
 	}
 	ctx.JSON(http.StatusOK, gin.H{
-		"Code": 0,
-		"Data": data,
+		"Code":             0,
+		"Data":             data,
+		"CoreCount":        models.MyMonitorTask.CoreCount,
+		"LogicalCoreCount": models.MyMonitorTask.LogicalCoreCount,
+		"CollectSysInfo":   models.MyMonitorTask.CollectSysInfo,
+		"runCount":         runCount,
+		"totalCount":       totalCount,
+		"taskStatus":       taskStatus,
 	})
 }
 

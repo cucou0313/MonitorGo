@@ -16,9 +16,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
+	"time"
 )
 
-func GetResHandler(ctx *gin.Context) {
+func GetAllResHandler(ctx *gin.Context) {
 	//resAll := make(map[string]interface{})
 	resAll := gin.H{
 		"data1": new(logic.AppResJson),
@@ -79,4 +80,47 @@ func ResParser(line string) *logic.MonitorResJson {
 		//fmt.Println("res_json", res_json)
 		return res_json
 	}
+}
+
+func GetOneResHandler(ctx *gin.Context) {
+	name := ctx.Query("name")
+	id := ctx.Query("id")
+	if id == "" {
+		ctx.JSON(http.StatusOK, gin.H{
+			"Code": 1,
+			"Msg":  "查询数据错误",
+		})
+	}
+	filepath := models.Task_dir + string(os.PathSeparator) + name + "_" + id + ".log"
+	fmt.Println(filepath)
+	resAll := gin.H{
+		"data1": new(logic.AppResJson),
+		"data2": new(logic.AppResJson),
+		"data3": new(logic.AppResJson),
+		"data4": new(logic.AppResJson),
+	}
+	if res := ReadResFromFile(filepath); res != nil {
+		res.ChartName = fmt.Sprintf("%d.%s(%s)", 1, name, models.HostIp)
+		resAll["data1"] = res
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"Code": 0,
+		"Data": resAll,
+	})
+}
+
+func DownResHandler(ctx *gin.Context) {
+	name := ctx.Query("name")
+	id := ctx.Query("id")
+	if id == "" {
+		ctx.JSON(http.StatusOK, gin.H{
+			"Code": 1,
+			"Msg":  "数据错误",
+		})
+	}
+	filepath := models.Task_dir + string(os.PathSeparator) + name + "_" + id + ".log"
+	filename := name + "_" + time.Now().Format("2006-01-02 15:04:05") + ".log"
+	ctx.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	ctx.Writer.Header().Add("Content-Type", "application/octet-stream")
+	ctx.File(filepath)
 }

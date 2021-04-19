@@ -20,7 +20,7 @@ func InitRouter() *gin.Engine {
 	task := router.Group("/task")
 	{
 		//测试任务信息
-		task.GET("/test", controller.TestTaskHandler)
+		task.GET("/check", controller.TestTaskHandler)
 		//开启系统信息
 		task.GET("/open_system", controller.OpenSysHandler)
 		//监控任务信息
@@ -45,8 +45,12 @@ func InitRouter() *gin.Engine {
 
 	res := router.Group("/res")
 	{
-		//读取监控结果
-		res.GET("/get", controller.GetResHandler)
+		//读取所有运行监控结果
+		res.GET("/get_all", controller.GetAllResHandler)
+		//读取指定任务结果
+		res.GET("/get_one", controller.GetOneResHandler)
+		//下载指定任务结果
+		res.GET("/down_file", controller.DownResHandler)
 	}
 
 	return router

@@ -14,6 +14,7 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -25,12 +26,12 @@ var MyMonitorTask = &MonitorTask{
 var IpList []string
 var HostIp = utils.GetHostIp()
 var ServerIp = HostIp
-var task_dir = filepath.Join(utils.GetExecPath(), "TaskLog")
+var Task_dir = filepath.Join(utils.GetExecPath(), "TaskLog")
 
 // 创建task日志路径
 func init() {
-	if !utils.FileExist(task_dir) {
-		_ = utils.CreateDir(task_dir)
+	if !utils.FileExist(Task_dir) {
+		_ = utils.CreateDir(Task_dir)
 	}
 }
 
@@ -75,13 +76,14 @@ func (mt *MonitorTask) AddTask(name string) error {
 	if name == "" {
 		return errors.New("task name is empty")
 	}
+	name_lower := strings.ToLower(name)
 	for _, task := range mt.Tasks {
-		if task.TaskName == name {
+		if strings.ToLower(task.TaskName) == name_lower {
 			return errors.New("this monitor task has been existed")
 		}
 	}
 	id := uuid.New()
-	file_path := task_dir + string(os.PathSeparator) + name + "_" + id + ".log"
+	file_path := Task_dir + string(os.PathSeparator) + name + "_" + id + ".log"
 	f := utils.CreateFile(file_path)
 	//fmt.Println(f, l)
 	newTask := &TaskInfo{
