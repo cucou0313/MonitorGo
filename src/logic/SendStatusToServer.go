@@ -8,6 +8,7 @@ IDE: GoLand
 package logic
 
 import (
+	"MonitorGo/src/utils"
 	"errors"
 	"fmt"
 	"net/http"
@@ -22,7 +23,8 @@ import (
 */
 func SendStatus(myip, serip string) {
 	if myip != serip {
-		fmt.Printf("client %s 向 server %s 注册信息\n", myip, serip)
+		utils.Mylog.Info("向服务端发送心跳")
+		//fmt.Printf("client %s 向 server %s 发送心跳\n", myip, serip)
 		request, _ := http.NewRequest(
 			"GET",
 			fmt.Sprintf("http://%s:10000/conn/listen_client?ip=%s", serip, myip),
@@ -33,10 +35,12 @@ func SendStatus(myip, serip string) {
 			Timeout: 2 * time.Second,
 		}).Do(request)
 		if err != nil {
-			fmt.Println(err.Error())
+			utils.Mylog.Info("心跳失败,err=", err.Error())
+			//fmt.Println(err.Error())
 			return
 		} else {
-			fmt.Println("注册信息完成")
+			utils.Mylog.Info("通讯正常")
+			//fmt.Println("通讯正常")
 		}
 		do.Body.Close()
 	}

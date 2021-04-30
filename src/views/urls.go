@@ -37,8 +37,8 @@ func InitRouter() *gin.Engine {
 
 	conn := router.Group("/conn")
 	{
-		//Listen Client
-		conn.GET("/listen_client", controller.ListClientHandler)
+		//终端心跳应答
+		conn.GET("/listen_client", controller.ClientAckHandler)
 		//获取在线终端
 		conn.GET("/get_all_ip", controller.GetAllClientHandler)
 	}
@@ -51,6 +51,8 @@ func InitRouter() *gin.Engine {
 		res.GET("/get_one", controller.GetOneResHandler)
 		//下载指定任务结果
 		res.GET("/down_file", controller.DownResHandler)
+		//获取本机系统信息
+		res.GET("/sys_info", controller.SysInfoHandler)
 	}
 
 	return router

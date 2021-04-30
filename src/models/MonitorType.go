@@ -12,6 +12,7 @@ import (
 	"errors"
 	"github.com/go-basic/uuid"
 	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/host"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,7 +37,7 @@ func init() {
 }
 
 type TaskInterface interface {
-	AddTask(name string, ip string) error
+	AddTask(name string) error
 	StartTask(id string) error
 	StopTask(id string) error
 	DelTask(id string) error
@@ -181,4 +182,32 @@ func GetLogicalCoreCount() int {
 	} else {
 		return core_count
 	}
+}
+
+func GetHostInfo() HostInfo {
+	info, err := host.Info()
+	res := &HostInfo{}
+	if err != nil {
+		return *res
+	}
+	res.Hostname = info.Hostname
+	res.BootTime = time.Unix(int64(info.BootTime), 0).Format("2006-01-02 15:04:05")
+	res.OS = info.OS
+	res.Procs = info.Procs
+	res.Platform = info.Platform
+	res.PlatformFamily = info.PlatformFamily
+	res.PlatformVersion = info.PlatformVersion
+	res.KernelArch = info.KernelArch
+	return *res
+}
+
+type HostInfo struct {
+	Hostname        string `json:"hostname"`
+	BootTime        string `json:"bootTime"`
+	OS              string `json:"os"`              // ex: freebsd, linux
+	Procs           uint64 `json:"procs"`           // number of processes
+	Platform        string `json:"platform"`        // ex: ubuntu, linuxmint
+	PlatformFamily  string `json:"platformFamily"`  // ex: debian, rhel
+	PlatformVersion string `json:"platformVersion"` // version of the complete OS
+	KernelArch      string `json:"kernelArch"`      // native cpu architecture queried at runtime, as returned by `uname -m` or empty string in case of error
 }

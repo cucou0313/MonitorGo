@@ -10,26 +10,28 @@ package controller
 import (
 	"MonitorGo/src/logic"
 	"MonitorGo/src/models"
-	"fmt"
+	"MonitorGo/src/utils"
 	"github.com/gin-gonic/gin"
 	"sort"
 )
 
-func ListClientHandler(ctx *gin.Context) {
+func ClientAckHandler(ctx *gin.Context) {
 	ip := ctx.Query("ip")
 	if ip != "" {
-		fmt.Printf("client %s 申请注册\n", ip)
+		utils.Mylog.Info(ip, " 发送心跳")
 		if err := logic.IpInList(ip, &models.IpList); err == nil {
 			models.IpList = append(models.IpList, ip)
-			fmt.Printf("client %s 注册成功\n", ip)
+			utils.Mylog.Info(ip, " 新客户端注册")
 		} else {
-			fmt.Printf("client %s 已经注册过\n", ip)
+			utils.Mylog.Info(ip, " 通讯正常")
 		}
 	}
-	fmt.Println(models.IpList)
 	ctx.Status(200)
 }
+
 func GetAllClientHandler(ctx *gin.Context) {
+	utils.Mylog.Info(ctx.ClientIP(), " 获取终端ip列表")
+
 	sort.Strings(models.IpList)
 	//服务端ip放第一
 	res := append([]string{models.HostIp}, models.IpList...)
@@ -37,8 +39,4 @@ func GetAllClientHandler(ctx *gin.Context) {
 		"Code": 0,
 		"Data": res,
 	})
-}
-
-func SendStatusHandler(ctx *gin.Context) {
-	logic.SendStatus(models.HostIp, models.ServerIp)
 }

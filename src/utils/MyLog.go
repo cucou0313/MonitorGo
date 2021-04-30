@@ -20,6 +20,9 @@ import (
 var projectName = "Monitor"
 var log_dir = filepath.Join(GetExecPath(), "GoLog")
 
+// Mylog 统一的运行日志
+var Mylog = LogInit("main")
+
 func LogInit(file_name string) *logrus.Logger {
 	if !FileExist(log_dir) {
 		_ = CreateDir(log_dir)

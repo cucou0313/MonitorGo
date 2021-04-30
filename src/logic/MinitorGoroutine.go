@@ -97,10 +97,10 @@ func RunMonitorTasks(mt *models.MonitorTask) {
 			//fmt.Println(string(jsonBytes))
 			task.File.WriteString(string(jsonBytes) + "\n")
 		}
+		SendStatus(models.HostIp, models.ServerIp)
 		timeEnd := time.Now().Local()
 		subSecond := timeEnd.Sub(timeStart).Milliseconds()
 		trueSleep := time.Millisecond * time.Duration(int64(ScanInterval*1000)-subSecond)
-		SendStatus(models.HostIp, models.ServerIp)
 		time.Sleep(trueSleep)
 	}
 }

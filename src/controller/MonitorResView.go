@@ -10,6 +10,7 @@ package controller
 import (
 	"MonitorGo/src/logic"
 	"MonitorGo/src/models"
+	"MonitorGo/src/utils"
 	"bufio"
 	"encoding/json"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 
 func GetAllResHandler(ctx *gin.Context) {
 	//resAll := make(map[string]interface{})
+	utils.Mylog.Info(ctx.ClientIP(), " 获取所有运行任务结果")
 	resAll := gin.H{
 		"data1": new(logic.AppResJson),
 		"data2": new(logic.AppResJson),
@@ -48,7 +50,7 @@ func GetAllResHandler(ctx *gin.Context) {
 func ReadResFromFile(file_path string) *logic.AppResJson {
 	f, err := os.Open(file_path)
 	if err != nil {
-		fmt.Println("open error")
+		utils.Mylog.Error(file_path, " 文件打开错误:", err.Error())
 		return nil
 	}
 	defer f.Close()
@@ -74,7 +76,7 @@ func ResParser(line string) *logic.MonitorResJson {
 	res_json := new(logic.MonitorResJson)
 	err := json.Unmarshal([]byte(line), res_json)
 	if err != nil {
-		fmt.Println(err.Error())
+		utils.Mylog.Error("log解析错误:", err.Error())
 		return nil
 	} else {
 		//fmt.Println("res_json", res_json)
@@ -85,6 +87,7 @@ func ResParser(line string) *logic.MonitorResJson {
 func GetOneResHandler(ctx *gin.Context) {
 	name := ctx.Query("name")
 	id := ctx.Query("id")
+	utils.Mylog.Info(ctx.ClientIP(), " 获取指定任务结果", name, id)
 	if id == "" {
 		ctx.JSON(http.StatusOK, gin.H{
 			"Code": 1,
@@ -92,7 +95,7 @@ func GetOneResHandler(ctx *gin.Context) {
 		})
 	}
 	filepath := models.Task_dir + string(os.PathSeparator) + name + "_" + id + ".log"
-	fmt.Println(filepath)
+	utils.Mylog.Info("任务文件地址:", filepath)
 	resAll := gin.H{
 		"data1": new(logic.AppResJson),
 		"data2": new(logic.AppResJson),
@@ -112,6 +115,7 @@ func GetOneResHandler(ctx *gin.Context) {
 func DownResHandler(ctx *gin.Context) {
 	name := ctx.Query("name")
 	id := ctx.Query("id")
+	utils.Mylog.Info(ctx.ClientIP(), " 申请下载任务日志", name, id)
 	if id == "" {
 		ctx.JSON(http.StatusOK, gin.H{
 			"Code": 1,
@@ -123,4 +127,9 @@ func DownResHandler(ctx *gin.Context) {
 	ctx.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	ctx.Writer.Header().Add("Content-Type", "application/octet-stream")
 	ctx.File(filepath)
+}
+
+func SysInfoHandler(ctx *gin.Context) {
+	utils.Mylog.Info(ctx.ClientIP(), " 获取系统信息")
+	ctx.JSON(200, models.GetHostInfo())
 }

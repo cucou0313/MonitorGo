@@ -9,9 +9,13 @@ IDE: GoLand
 package utils
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/StackExchange/wmi"
+	"os/exec"
+	"strconv"
+	"strings"
 	"syscall"
 	"unsafe"
 )
@@ -116,4 +120,31 @@ func GetPidByWmiProcess(processName string) (Win32_Process, error) {
 	} else {
 		return dst[0], errQuery
 	}
+}
+
+/**
+ * @Description: 通过ps -ef 获取linux进程id
+ * @param processName 进程名
+ * @return int32 pid
+ * @return error
+ */
+func GetPidInLinux(processName string) (int32, error) {
+	cmdLine := fmt.Sprintf(`ps -ef | grep %s | grep -v grep | awk '{print $2}'`, processName)
+	cmd := exec.Command("bash", "-c", cmdLine)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	var res string
+	if err != nil {
+		Mylog.Error("processName=%s ,GetPidInLinux err", processName, err.Error())
+		return 0, err
+	}
+	res = out.String()
+	res = strings.TrimSuffix(res, "\n")
+	pid, err := strconv.ParseInt(res, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println("linux pid", pid)
+	return int32(pid), nil
 }

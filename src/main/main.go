@@ -14,15 +14,14 @@ import (
 	"MonitorGo/src/views"
 )
 
-var mylog = utils.LogInit("main")
-
 func main() {
-	router := views.InitRouter()
 	defer models.CloseAllFile(models.MyMonitorTask)
 	go logic.RunMonitorTasks(models.MyMonitorTask)
 
-	mylog.Info("main start")
-	mylog.Info("start listen port 10000")
+	router := views.InitRouter()
+	utils.Mylog.Info("Monitor start")
+	utils.Mylog.Info("Monitor server ip=", models.HostIp)
+	utils.Mylog.Info("Start listen on port 10000")
 
 	router.Run("0.0.0.0:10000")
 }
